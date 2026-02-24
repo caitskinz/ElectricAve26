@@ -1,168 +1,179 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Festival Bingo</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <style>
-  :root {
-  --gap: 10px;
-  --radius: 14px;
-  --shadow: 0 6px 18px rgba(0,0,0,.10);
-}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Festival Bingo</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <style>
+        :root {
+            --gap: 10px;
+            --radius: 14px;
+            --shadow: 0 6px 18px rgba(0, 0, 0, .10);
+        }
 
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  background: #fafafa;
-  color: #111;
-}
+        * {
+            box-sizing: border-box;
+        }
 
-.daypick { display:flex; gap:10px; margin-bottom:10px; }
-.daypick button.active { background:#111; color:#fff; border-color:#111; }
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            background: #fafafa;
+            color: #111;
+        }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  background: white;
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid #eee;
-  z-index: 10;
-}
+        .daypick {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
 
-h1 {
-  font-size: 18px;
-  margin: 0 0 10px;
-}
+        .daypick button.active {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
 
-.actions {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 8px;
-}
+        .topbar {
+            position: sticky;
+            top: 0;
+            background: white;
+            padding: 14px 14px 10px;
+            border-bottom: 1px solid #eee;
+            z-index: 10;
+        }
 
-button {
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  font-weight: 600;
-}
+        h1 {
+            font-size: 18px;
+            margin: 0 0 10px;
+        }
 
-button:active { transform: translateY(1px); }
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
 
-.status {
-  margin: 0;
-  font-size: 13px;
-  color: #444;
-}
+        button {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            font-weight: 600;
+        }
 
-main {
-  padding: 14px;
-  max-width: 820px;
-  margin: 0 auto;
-}
+        button:active {
+            transform: translateY(1px);
+        }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--gap);
-}
+        .status {
+            margin: 0;
+            font-size: 13px;
+            color: #444;
+        }
 
-.square {
-  user-select: none;
-  min-height: 90px;
-  padding: 10px;
-  border-radius: var(--radius);
-  border: 1px solid #e7e7e7;
-  background: white;
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  line-height: 1.2;
-  font-weight: 650;
-  font-size: 14px;
-}
+        main {
+            padding: 14px;
+            max-width: 820px;
+            margin: 0 auto;
+        }
 
-.square.checked {
-  border-color: #111;
-  background: #111;
-  color: #fff;
-}
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: var(--gap);
+        }
 
-.footer {
-  padding: 14px;
-  text-align: center;
-  color: #666;
-}
-</style>
+        .square {
+            user-select: none;
+            min-height: 90px;
+            padding: 10px;
+            border-radius: var(--radius);
+            border: 1px solid #e7e7e7;
+            background: white;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+            font-weight: 650;
+            font-size: 14px;
+        }
+
+        .square.checked {
+            border-color: #111;
+            background: #111;
+            color: #fff;
+        }
+
+        .footer {
+            padding: 14px;
+            text-align: center;
+            color: #666;
+        }
+    </style>
 </head>
+
 <body>
-  <header class="topbar">
-    <h1>Festival Bingo</h1>
-    <div class="daypick">
-  <button id="day1Btn" type="button">Day 1</button>
-  <button id="day2Btn" type="button">Day 2</button>
-</div>
-    <div class="actions">
-      <button id="newBoardBtn" type="button">New board</button>
-      <button id="resetTicksBtn" type="button">Reset ticks</button>
-    </div>
-    <p class="status" id="status"></p>
-  </header>
+    <header class="topbar">
+        <h1>Festival Bingo</h1>
+        <div class="daypick">
+            <button id="day1Btn" type="button">Day 1</button>
+            <button id="day2Btn" type="button">Day 2</button>
+        </div>
+        <div class="actions">
+            <button id="newBoardBtn" type="button">New board</button>
+            <button id="resetTicksBtn" type="button">Reset ticks</button>
+        </div>
+        <p class="status" id="status"></p>
+    </header>
 
-  <main>
-    <section class="grid" id="grid" aria-label="Bingo grid"></section>
-  </main>
+    <main>
+        <section class="grid" id="grid" aria-label="Bingo grid"></section>
+    </main>
 
-  <footer class="footer">
-    <small>
-      Tip: open once before you leave to cache it for offline.
-    </small>
-  </footer>
+    <footer class="footer">
+        <small>
+            Tip: open once before you leave to cache it for offline.
+        </small>
+    </footer>
 
-  <script>// -------------- CONFIG --------------
-/* =========================
+    <script>
+    /* =========================
    Festival Bingo (Day 1 + Day 2)
-   - Fetches one published Google Sheet CSV (Col A = Day 1, Col B = Day 2)
-   - Generates a shuffled 5x5 board per day, per device
+   - 4x4 grid (16 tiles)
+   - No free space
+   - Needs 16 ideas per day
    - Saves board + ticks in localStorage (survives refresh)
-   - Works offline if you use sw.js to cache index.html + the CSV
+   - Offline-friendly if you use sw.js to cache index.html + the CSV
    ========================= */
 
 /* -------- CONFIG -------- */
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2Yj9ONo5kfoZo1aRy8W4JniBbm36PqEy_Q93wYempTgNjeYxXt_U3V5vGoyUG9cgTTT2NcThJHpEz/pub?output=csv";
-const GRID_SIZE = 25; // 5x5
-const STORE_KEY_PREFIX = "festival-bingo-v1-day-"; // + "1" or "2"
-const OPTIONS_CACHE_KEY = "festival-bingo-v1-options-cache"; // stores last good options (for offline fallback)
+
+const GRID_DIM = 4;
+const GRID_SIZE = GRID_DIM * GRID_DIM; // 16
+const IDEAS_NEEDED = GRID_SIZE;         // 16
+
+const STORE_KEY_PREFIX = "festival-bingo-v3-day-"; // bumped version because grid changed
+const OPTIONS_CACHE_KEY = "festival-bingo-v3-options-cache";
 
 /* -------- DOM HELPERS -------- */
-function $(id) {
-  return document.getElementById(id);
-}
-
-function setStatus(msg) {
-  const el = $("status");
-  if (el) el.textContent = msg;
-}
+function $(id) { return document.getElementById(id); }
+function setStatus(msg) { const el = $("status"); if (el) el.textContent = msg; }
 
 /* -------- LOCAL STORAGE -------- */
-function storeKeyForDay(day) {
-  return `${STORE_KEY_PREFIX}${day}`;
-}
+function storeKeyForDay(day) { return `${STORE_KEY_PREFIX}${day}`; }
 
 function loadStateForDay(day) {
   try {
     const raw = localStorage.getItem(storeKeyForDay(day));
     return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function saveStateForDay(day, state) {
@@ -173,9 +184,7 @@ function loadCachedOptions() {
   try {
     const raw = localStorage.getItem(OPTIONS_CACHE_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function saveCachedOptions(optionsByDay) {
@@ -223,44 +232,26 @@ function parseCSVToRows(text) {
     const next = text[i + 1];
 
     if (inQuotes) {
-      if (c === '"' && next === '"') {
-        field += '"';
-        i++;
-      } else if (c === '"') {
-        inQuotes = false;
-      } else {
-        field += c;
-      }
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') inQuotes = false;
+      else field += c;
     } else {
-      if (c === '"') {
-        inQuotes = true;
-      } else if (c === ",") {
-        row.push(field);
-        field = "";
-      } else if (c === "\n") {
-        row.push(field);
-        rows.push(row);
-        row = [];
-        field = "";
-      } else if (c === "\r") {
-        // ignore CR
-      } else {
-        field += c;
-      }
+      if (c === '"') inQuotes = true;
+      else if (c === ",") { row.push(field); field = ""; }
+      else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+      else if (c === "\r") { /* ignore */ }
+      else field += c;
     }
   }
 
-  // Add last field/row
   row.push(field);
   rows.push(row);
-
   return rows;
 }
 
-// Your sheet: Col A = Day 1, Col B = Day 2, headers in row 1
+// Sheet: Col A = Day 1, Col B = Day 2, headers in row 1
 function extractDayListsFromCSV(text) {
   const rows = parseCSVToRows(text);
-
   const day1 = [];
   const day2 = [];
 
@@ -274,9 +265,8 @@ function extractDayListsFromCSV(text) {
   return { day1, day2 };
 }
 
-/* -------- OPTIONS HASH (CHANGE DETECTION) -------- */
+/* -------- OPTIONS HASH -------- */
 function hashList(list) {
-  // Simple non-crypto hash
   let h = 2166136261;
   for (const s of list) {
     for (let i = 0; i < s.length; i++) {
@@ -291,7 +281,7 @@ function hashOptionsByDay(optionsByDay) {
   return `${hashList(optionsByDay.day1)}-${hashList(optionsByDay.day2)}`;
 }
 
-/* -------- BOARD GENERATION -------- */
+/* -------- BOARD GENERATION (4x4) -------- */
 function makeNewBoardFromOptions(items) {
   const pool = [...items];
   shuffleInPlace(pool);
@@ -304,7 +294,7 @@ function makeNewBoardFromOptions(items) {
   };
 }
 
-/* -------- RENDERING -------- */
+/* -------- RENDER -------- */
 function renderBoard(state) {
   const grid = $("grid");
   if (!grid) return;
@@ -335,18 +325,18 @@ const app = {
   state: null
 };
 
-/* -------- FETCH + LOAD -------- */
 async function fetchAllOptions() {
   const res = await fetch(SHEET_CSV_URL, { cache: "no-store" });
   if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
   const text = await res.text();
+
   const optionsByDay = extractDayListsFromCSV(text);
 
-  if (optionsByDay.day1.length < GRID_SIZE) {
-    throw new Error(`Day 1 needs at least ${GRID_SIZE} ideas (found ${optionsByDay.day1.length}).`);
+  if (optionsByDay.day1.length < IDEAS_NEEDED) {
+    throw new Error(`Day 1 needs at least ${IDEAS_NEEDED} ideas (found ${optionsByDay.day1.length}).`);
   }
-  if (optionsByDay.day2.length < GRID_SIZE) {
-    throw new Error(`Day 2 needs at least ${GRID_SIZE} ideas (found ${optionsByDay.day2.length}).`);
+  if (optionsByDay.day2.length < IDEAS_NEEDED) {
+    throw new Error(`Day 2 needs at least ${IDEAS_NEEDED} ideas (found ${optionsByDay.day2.length}).`);
   }
 
   return optionsByDay;
@@ -357,38 +347,34 @@ function getListForDay(day) {
 }
 
 function setActiveDayButtons(day) {
-  const d1 = $("day1Btn");
-  const d2 = $("day2Btn");
-  if (d1) d1.classList.toggle("active", day === 1);
-  if (d2) d2.classList.toggle("active", day === 2);
+  $("day1Btn")?.classList.toggle("active", day === 1);
+  $("day2Btn")?.classList.toggle("active", day === 2);
 }
 
 async function loadDay(day) {
   app.currentDay = day;
   setActiveDayButtons(day);
 
-  // Load saved board state for this day
   app.state = loadStateForDay(day);
 
-  // Try to ensure we have options lists
-  // 1) network (or SW cached fetch)
-  // 2) fallback to local cached options
   try {
     setStatus(`Loading squares (Day ${day})…`);
     app.optionsByDay = await fetchAllOptions();
     app.optionsHash = hashOptionsByDay(app.optionsByDay);
-    saveCachedOptions({ day1: app.optionsByDay.day1, day2: app.optionsByDay.day2, optionsHash: app.optionsHash });
 
-    // If no state yet for this day, create one
+    saveCachedOptions({
+      day1: app.optionsByDay.day1,
+      day2: app.optionsByDay.day2,
+      optionsHash: app.optionsHash
+    });
+
     if (!app.state) {
       const list = getListForDay(day);
       app.state = makeNewBoardFromOptions(list);
-      // store hash so we can warn if ideas changed later
       app.state.optionsHash = app.optionsHash;
       saveStateForDay(day, app.state);
       setStatus(`Day ${day} ready. New board created.`);
     } else {
-      // If ideas changed since this board was made, keep board but update stored hash
       if (app.state.optionsHash && app.state.optionsHash !== app.optionsHash) {
         setStatus(`Squares updated since last time. Your Day ${day} board is kept — tap “New board” to reshuffle.`);
         app.state.optionsHash = app.optionsHash;
@@ -398,14 +384,12 @@ async function loadDay(day) {
       }
     }
   } catch (e) {
-    // fallback to cached options (localStorage)
     const cached = loadCachedOptions();
-    if (cached?.day1?.length >= GRID_SIZE && cached?.day2?.length >= GRID_SIZE) {
+    if (cached?.day1?.length >= IDEAS_NEEDED && cached?.day2?.length >= IDEAS_NEEDED) {
       app.optionsByDay = { day1: cached.day1, day2: cached.day2 };
       app.optionsHash = cached.optionsHash || hashOptionsByDay(app.optionsByDay);
 
       if (!app.state) {
-        // We can still create a new board from cached options even offline
         const list = getListForDay(day);
         app.state = makeNewBoardFromOptions(list);
         app.state.optionsHash = app.optionsHash;
@@ -415,7 +399,6 @@ async function loadDay(day) {
         setStatus(`Offline: using saved Day ${day} board.`);
       }
     } else if (app.state?.board?.length === GRID_SIZE) {
-      // We have a saved board but not the options lists; still playable
       setStatus(`Offline: using saved Day ${day} board.`);
     } else {
       setStatus(`Couldn’t load squares. Go online once before leaving to set up Day ${day}.`);
@@ -427,7 +410,7 @@ async function loadDay(day) {
   renderBoard(app.state);
 }
 
-/* -------- BUTTON WIRES -------- */
+/* -------- UI WIRING -------- */
 function wireUI() {
   $("day1Btn")?.addEventListener("click", () => loadDay(1));
   $("day2Btn")?.addEventListener("click", () => loadDay(2));
@@ -454,11 +437,11 @@ function wireUI() {
   });
 }
 
-/* -------- SERVICE WORKER (optional but recommended) -------- */
+/* -------- SERVICE WORKER -------- */
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) return;
   try {
-    await navigator.serviceWorker.register("./sw.js");
+    await navigator.serviceWorker.register(new URL("sw.js", window.location.href));
   } catch (e) {
     console.warn("Service worker registration failed:", e);
   }
@@ -468,18 +451,9 @@ async function registerServiceWorker() {
 (async function init() {
   await registerServiceWorker();
   wireUI();
-
-  // Default to Day 1
   await loadDay(1);
-
-  // Optional: if you're online, lightly “warm” the cache by fetching once more in background
-  // (this helps some browsers cache the CSV early)
-  if (navigator.onLine) {
-    fetchAllOptions()
-      .then(opts => saveCachedOptions({ day1: opts.day1, day2: opts.day2, optionsHash: hashOptionsByDay(opts) }))
-      .catch(() => {});
-  }
 })();
-</script>
+    </script>
 </body>
+
 </html>
