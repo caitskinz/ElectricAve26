@@ -1,0 +1,8 @@
+{
+  "name": "Festival Bingo",
+  "short_name": "Bingo",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff"
+}
