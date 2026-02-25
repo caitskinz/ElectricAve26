@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Festival Bingo</title>
+    <title>Electric Ave Bingo</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
       :root {
@@ -54,10 +54,10 @@
 
       /* Logo: your earlier width:40% gets overridden by this, so keep only one */
       .logo {
-        display: flex;
+        display: block;
         width: min(240px, 60%);
-        justify-content: center;
-        justify-self: center;
+        height: auto;
+        margin: 0 auto 8px; /* centers + gives a bit of spacing */
       }
 
       /* ✅ Top bar buttons: 2x2 (always) */
@@ -150,6 +150,88 @@
         display: none;
       }
 
+      /* --- Bingo overlay --- */
+      .overlay[hidden] {
+        display: none;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        display: grid;
+        place-items: center;
+        z-index: 9999;
+        padding: 20px;
+      }
+
+      .overlay-card {
+        width: min(420px, 92vw);
+        background: #ff46a2;
+        border-radius: 18px;
+        padding: 18px 16px;
+        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+        text-align: center;
+        position: relative;
+      }
+
+      .overlay-title {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        color: #f9e7d2;
+      }
+
+      .overlay-sub {
+        font-size: 14px;
+        opacity: 0.75;
+        margin-bottom: 12px;
+        color: white;
+      }
+
+      .overlay-actions {
+        display: flex;
+        justify-content: center;
+      }
+
+      /* --- Confetti (CSS only) --- */
+      .confetti {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+
+      .confetti i {
+        position: absolute;
+        top: -12px;
+        width: 10px;
+        height: 14px;
+        opacity: 0.95;
+        transform: rotate(10deg);
+        animation: fall 1100ms linear forwards;
+        border-radius: 3px;
+      }
+
+      @keyframes fall {
+        to {
+          transform: translateY(110vh) rotate(360deg);
+          opacity: 1;
+        }
+      }
+
+      /* Optional: a tiny “win” badge style if you add one later */
+      .badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid #ddd;
+        background: #fff;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+        font-weight: 700;
+        font-size: 13px;
+      }
+
       /* Responsive tweaks */
       @media (max-width: 768px) {
         :root {
@@ -171,11 +253,7 @@
         .topbar {
           padding: 12px 12px 8px;
         }
-        .logo {
-            display: flex;
-            justify-content: center;
-            justify-self: center;
-        }
+        
         main {
           padding: 10px;
         }
@@ -208,15 +286,25 @@
     <footer class="footer">
       <small> Tip: open once before you leave to cache it for offline. </small>
     </footer>
+    <div id="bingoOverlay" class="overlay" hidden>
+      <div class="overlay-card">
+        <div class="overlay-title">BINGOOOOO! 🎉</div>
+        <div class="overlay-sub">What a slay</div>
+        <div class="overlay-actions">
+          <button id="closeOverlayBtn" type="button">u go gurl 💅</button>
+        </div>
+      </div>
+      <div id="confetti" class="confetti" aria-hidden="true"></div>
+    </div>
 
     <script>
       /* =========================
    Festival Bingo (Day 1 + Day 2)
-   - 4x4 grid (16 tiles)
-   - No free space
-   - Needs 16 ideas per day
-   - Saves board + ticks in localStorage (survives refresh)
-   - Offline-friendly if you use sw.js to cache index.html + the CSV
+   - 4x4 grid (16 tiles), no free space
+   - Day 1 ideas in Col A, Day 2 in Col B (row 1 headers)
+   - Saves board + ticks + wins locally
+   - Offline-friendly with sw.js caching
+   - FUN: Bingo detection + overlay + confetti + sound + haptics + win counter
    ========================= */
 
       /* -------- CONFIG -------- */
@@ -225,10 +313,11 @@
 
       const GRID_DIM = 4;
       const GRID_SIZE = GRID_DIM * GRID_DIM; // 16
-      const IDEAS_NEEDED = GRID_SIZE; // 16
+      const IDEAS_NEEDED = GRID_SIZE;
 
-      const STORE_KEY_PREFIX = "festival-bingo-v3-day-"; // bumped version because grid changed
+      const STORE_KEY_PREFIX = "festival-bingo-v3-day-";
       const OPTIONS_CACHE_KEY = "festival-bingo-v3-options-cache";
+      const WINS_KEY_PREFIX = "festival-bingo-v3-wins-day-"; // + 1 or 2
 
       /* -------- DOM HELPERS -------- */
       function $(id) {
@@ -243,6 +332,9 @@
       function storeKeyForDay(day) {
         return `${STORE_KEY_PREFIX}${day}`;
       }
+      function winsKeyForDay(day) {
+        return `${WINS_KEY_PREFIX}${day}`;
+      }
 
       function loadStateForDay(day) {
         try {
@@ -252,9 +344,19 @@
           return null;
         }
       }
-
       function saveStateForDay(day, state) {
         localStorage.setItem(storeKeyForDay(day), JSON.stringify(state));
+      }
+
+      function loadWinsForDay(day) {
+        try {
+          return Number(localStorage.getItem(winsKeyForDay(day)) || "0");
+        } catch {
+          return 0;
+        }
+      }
+      function saveWinsForDay(day, wins) {
+        localStorage.setItem(winsKeyForDay(day), String(wins));
       }
 
       function loadCachedOptions() {
@@ -265,7 +367,6 @@
           return null;
         }
       }
-
       function saveCachedOptions(optionsByDay) {
         localStorage.setItem(
           OPTIONS_CACHE_KEY,
@@ -293,7 +394,6 @@
         }
         return min + Math.floor(Math.random() * range);
       }
-
       function shuffleInPlace(arr) {
         for (let i = arr.length - 1; i > 0; i--) {
           const j = randomInt(0, i + 1);
@@ -347,13 +447,11 @@
         const day2 = [];
 
         for (let r = 1; r < rows.length; r++) {
-          // skip header row
           const a = (rows[r][0] ?? "").trim();
           const b = (rows[r][1] ?? "").trim();
           if (a) day1.push(a);
           if (b) day2.push(b);
         }
-
         return { day1, day2 };
       }
 
@@ -368,12 +466,11 @@
         }
         return String(h >>> 0);
       }
-
       function hashOptionsByDay(optionsByDay) {
         return `${hashList(optionsByDay.day1)}-${hashList(optionsByDay.day2)}`;
       }
 
-      /* -------- BOARD GENERATION (4x4) -------- */
+      /* -------- BOARD GENERATION -------- */
       function makeNewBoardFromOptions(items) {
         const pool = [...items];
         shuffleInPlace(pool);
@@ -383,10 +480,106 @@
           createdAt: new Date().toISOString(),
           board,
           checked: Array(GRID_SIZE).fill(false),
+          celebratedFull: false, // celebrate only when the whole grid is checked
         };
       }
 
+      function isFullGrid(checked) {
+        return checked.every(Boolean);
+      }
+
+      /* -------- FUN EFFECTS -------- */
+      function vibrate(ms = 40) {
+        try {
+          navigator.vibrate?.(ms);
+        } catch {}
+      }
+
+      let audioCtx = null;
+      function playWinSound() {
+        try {
+          audioCtx =
+            audioCtx ||
+            new (window.AudioContext || window.webkitAudioContext)();
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.type = "sine";
+          o.frequency.value = 740;
+          g.gain.value = 0.0001;
+
+          o.connect(g);
+          g.connect(audioCtx.destination);
+
+          const now = audioCtx.currentTime;
+          g.gain.setValueAtTime(0.0001, now);
+          g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+          o.start(now);
+          o.stop(now + 0.2);
+        } catch {}
+      }
+
+      function burstConfetti() {
+        const confetti = $("confetti");
+        if (!confetti) return;
+
+        confetti.innerHTML = "";
+        const pieces = 40;
+
+        for (let i = 0; i < pieces; i++) {
+          const p = document.createElement("i");
+          const left = randomInt(0, 100);
+          const delay = randomInt(0, 250);
+          const dur = randomInt(900, 1400);
+          const w = randomInt(6, 12);
+          const h = randomInt(10, 18);
+
+          p.style.left = `${left}vw`;
+          p.style.animationDelay = `${delay}ms`;
+          p.style.animationDuration = `${dur}ms`;
+          p.style.width = `${w}px`;
+          p.style.height = `${h}px`;
+
+          const palette = [
+            "#111",
+            "#ff3b30",
+            "#ffcc00",
+            "#34c759",
+            "#0a84ff",
+            "#bf5af2",
+          ];
+          p.style.background = palette[randomInt(0, palette.length)];
+          p.style.transform = `rotate(${randomInt(0, 360)}deg)`;
+
+          confetti.appendChild(p);
+        }
+
+        setTimeout(() => {
+          confetti.innerHTML = "";
+        }, 1600);
+      }
+
+      function showBingoOverlay() {
+        const overlay = $("bingoOverlay");
+        if (!overlay) return;
+        overlay.hidden = false;
+        burstConfetti();
+      }
+
+      function hideBingoOverlay() {
+        const overlay = $("bingoOverlay");
+        if (!overlay) return;
+        overlay.hidden = true;
+      }
+
       /* -------- RENDER -------- */
+      function updateWinBadge() {
+        const wins = loadWinsForDay(app.currentDay);
+        const el = $("winsBadge");
+        if (el) el.textContent = `Wins: ${wins}`;
+      }
+
       function renderBoard(state) {
         const grid = $("grid");
         if (!grid) return;
@@ -401,12 +594,36 @@
 
           btn.addEventListener("click", () => {
             state.checked[idx] = !state.checked[idx];
-            saveStateForDay(app.currentDay, state);
             btn.classList.toggle("checked", state.checked[idx]);
+
+            // Celebrate ONLY when the whole grid is checked
+            const full = isFullGrid(state.checked);
+
+            if (full && !state.celebratedFull) {
+              state.celebratedFull = true;
+
+              // increment wins (now means "full card")
+              const wins = loadWinsForDay(app.currentDay) + 1;
+              saveWinsForDay(app.currentDay, wins);
+              updateWinBadge();
+
+              vibrate(80);
+              playWinSound();
+              showBingoOverlay();
+            }
+
+            // If they untick anything, allow celebrating again later
+            if (!full && state.celebratedFull) {
+              state.celebratedFull = false;
+            }
+
+            saveStateForDay(app.currentDay, state);
           });
 
           grid.appendChild(btn);
         });
+
+        updateWinBadge();
       }
 
       /* -------- APP STATE -------- */
@@ -471,6 +688,10 @@
             saveStateForDay(day, app.state);
             setStatus(`Day ${day} ready. New board created.`);
           } else {
+            // Back-compat: older saved states might not have celebratedFull yet
+            if (typeof app.state.celebratedFull !== "boolean")
+              app.state.celebratedFull = false;
+
             if (
               app.state.optionsHash &&
               app.state.optionsHash !== app.optionsHash
@@ -507,9 +728,13 @@
                 `Offline: created a new Day ${day} board from cached squares.`,
               );
             } else {
+              if (typeof app.state.celebratedFull !== "boolean")
+                app.state.celebratedFull = false;
               setStatus(`Offline: using saved Day ${day} board.`);
             }
           } else if (app.state?.board?.length === GRID_SIZE) {
+            if (typeof app.state.celebratedFull !== "boolean")
+              app.state.celebratedFull = false;
             setStatus(`Offline: using saved Day ${day} board.`);
           } else {
             setStatus(
@@ -545,9 +770,17 @@
         $("resetTicksBtn")?.addEventListener("click", () => {
           if (!app.state) return;
           app.state.checked = Array(GRID_SIZE).fill(false);
+          app.state.celebratedFull = false; // allow celebration again
           saveStateForDay(app.currentDay, app.state);
           renderBoard(app.state);
           setStatus(`Day ${app.currentDay}: ticks reset.`);
+        });
+
+        $("closeOverlayBtn")?.addEventListener("click", hideBingoOverlay);
+
+        // Tap outside card closes overlay
+        $("bingoOverlay")?.addEventListener("click", (e) => {
+          if (e.target && e.target.id === "bingoOverlay") hideBingoOverlay();
         });
       }
 
@@ -567,6 +800,18 @@
       (async function init() {
         await registerServiceWorker();
         wireUI();
+
+        // Inject a wins badge into the status line area if you haven't added one manually
+        const statusEl = $("status");
+        if (statusEl && !$("winsBadge")) {
+          const badge = document.createElement("span");
+          badge.id = "winsBadge";
+          badge.className = "badge";
+          badge.style.marginLeft = "10px";
+          badge.textContent = "Wins: 0";
+          statusEl.appendChild(badge);
+        }
+
         await loadDay(1);
       })();
     </script>
