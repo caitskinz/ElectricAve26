@@ -1,831 +1,888 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta
-      name="format-detection"
-      content="telephone=no, email=no, address=no"
-    />
-    <title>Electric Ave Bingo</title>
-    <link rel="manifest" href="manifest.webmanifest" />
-    <style>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="format-detection" content="telephone=no, email=no, address=no" />
+  <title>Electric Ave Bingo</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <style>
+    :root {
+      --gap: 10px;
+      --radius: 14px;
+      --shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        system-ui,
+        -apple-system,
+        Segoe UI,
+        Roboto,
+        Helvetica,
+        Arial,
+        sans-serif;
+      background: linear-gradient(#2eb399, #ff775e, #ecc158);
+      color: #111;
+    }
+
+    a,
+    a:visited,
+    a:active {
+      color: black;
+      text-decoration: none;
+    }
+
+    .topbar {
+      top: 0;
+      background: linear-gradient(#0586b9, #2eb399);
+      padding: 14px 14px 10px;
+      border-bottom: dashed 2px #f9e7d2;
+      z-index: 10;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 0 0 10px;
+      text-align: center;
+      color: #f9e7d2;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-shadow: 3px 2px 3px #0e85b6;
+    }
+
+    /* Logo: your earlier width:40% gets overridden by this, so keep only one */
+    .logo {
+      display: block;
+      width: min(240px, 60%);
+      height: auto;
+      margin: 0 auto 8px;
+      /* centers + gives a bit of spacing */
+    }
+
+    /* ✅ Top bar buttons: 2x2 (always) */
+    .actions,
+    .daypick {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .actions {
+      margin-bottom: 8px;
+    }
+
+    .actions button,
+    .daypick button {
+      width: 100%;
+    }
+
+    .daypick button.active {
+      background: #0e85b6;
+      color: #f9e7d2;
+      border-color: #f9e7d2;
+      -webkit-text-fill-color: #f9e7d2;
+    }
+
+    button {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      background: #f9e7d2;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      font-weight: 600;
+      color: #111;
+      -webkit-text-fill-color: #111;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .status {
+      margin: 0;
+      font-size: 13px;
+      color: #444;
+      display: none;
+    }
+
+    main {
+      padding: 14px;
+      max-width: 820px;
+      margin: 0 auto;
+      border-bottom: dashed 2px #f9e7d2;
+    }
+
+    /* ✅ Main grid: 4 columns (4x4 if you have 16 items) */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--gap);
+    }
+
+    .square {
+      user-select: none;
+      padding: 10px;
+      border-radius: var(--radius);
+      border: 1px solid #e7e7e7;
+      background: #f9e7d2;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1.2;
+      font-weight: 650;
+      font-size: 14px;
+
+      /* ✅ keeps tiles square for a nice 4x4 look */
+      aspect-ratio: 1 / 1;
+    }
+
+    .square.checked {
+      border-color: #fff;
+      background: linear-gradient(#0586b9, #2eb399, #ecc158);
+      color: #fff;
+      -webkit-text-fill-color: #fff;
+    }
+
+    /* Squares that are part of a completed line */
+    .square.checked.linewin {
+      /* Pick whatever vibe you like here */
+      background: #ff46a2;
+      /* hot pink */
+      color: #fff;
+      -webkit-text-fill-color: #fff;
+      /* iOS */
+      border-color: #fff;
+      box-shadow: 0 0 0 3px #fff inset, var(--shadow);
+    }
+
+    .footer {
+      padding: 14px;
+      text-align: center;
+      color: #fff;
+    }
+
+    /* --- Bingo overlay --- */
+    .overlay[hidden] {
+      display: none;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      display: grid;
+      place-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .overlay-card {
+      width: min(420px, 92vw);
+      background: #ff46a2;
+      border-radius: 18px;
+      padding: 18px 16px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      position: relative;
+    }
+
+    .overlay-title {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      color: #f9e7d2;
+    }
+
+    .overlay-sub {
+      font-size: 14px;
+      opacity: 0.75;
+      margin-bottom: 12px;
+      color: white;
+    }
+
+    .overlay-actions {
+      display: flex;
+      justify-content: center;
+    }
+
+    /* --- Confetti (CSS only) --- */
+    .confetti {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .confetti i {
+      position: absolute;
+      top: -12px;
+      width: 10px;
+      height: 14px;
+      opacity: 0.95;
+      transform: rotate(10deg);
+      animation: fall 1100ms linear forwards;
+      border-radius: 3px;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(110vh) rotate(360deg);
+        opacity: 1;
+      }
+    }
+
+    /* Optional: a tiny “win” badge style if you add one later */
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      background: #fff;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 768px) {
       :root {
-        --gap: 10px;
-        --radius: 14px;
-        --shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family:
-          system-ui,
-          -apple-system,
-          Segoe UI,
-          Roboto,
-          Helvetica,
-          Arial,
-          sans-serif;
-        background: linear-gradient(#2eb399, #ff775e, #ecc158);
-        color: #111;
-      }
-
-      a,
-      a:visited,
-      a:active {
-        color: black;
-        text-decoration: none;
-      }
-
-      .topbar {
-        top: 0;
-        background: linear-gradient(#0586b9, #2eb399);
-        padding: 14px 14px 10px;
-        border-bottom: dashed 2px #f9e7d2;
-        z-index: 10;
-      }
-
-      h1 {
-        font-size: 22px;
-        margin: 0 0 10px;
-        text-align: center;
-        color: #f9e7d2;
-        font-weight: 700;
-        letter-spacing: 3px;
-        text-shadow: 3px 2px 3px #0e85b6;
-      }
-
-      /* Logo: your earlier width:40% gets overridden by this, so keep only one */
-      .logo {
-        display: block;
-        width: min(240px, 60%);
-        height: auto;
-        margin: 0 auto 8px; /* centers + gives a bit of spacing */
-      }
-
-      /* ✅ Top bar buttons: 2x2 (always) */
-      .actions,
-      .daypick {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        margin-bottom: 10px;
-      }
-
-      .actions {
-        margin-bottom: 8px;
-      }
-
-      .actions button,
-      .daypick button {
-        width: 100%;
-      }
-
-      .daypick button.active {
-        background: #0e85b6;
-        color: #f9e7d2;
-        border-color: #f9e7d2;
-        -webkit-text-fill-color: #f9e7d2;
-      }
-
-      button {
-        padding: 10px 12px;
-        border: 1px solid #ddd;
-        background: #f9e7d2;
-        border-radius: 12px;
-        box-shadow: var(--shadow);
-        font-weight: 600;
-        color: #111;
-        -webkit-text-fill-color: #111;
-        -webkit-appearance: none;
-        appearance: none;
-      }
-
-      button:active {
-        transform: translateY(1px);
-      }
-
-      .status {
-        margin: 0;
-        font-size: 13px;
-        color: #444;
-        display: none;
+        --gap: 8px;
+        --radius: 12px;
       }
 
       main {
-        padding: 14px;
-        max-width: 820px;
-        margin: 0 auto;
-        border-bottom: dashed 2px #f9e7d2;
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 18px;
+        letter-spacing: 2px;
       }
 
-      /* ✅ Main grid: 4 columns (4x4 if you have 16 items) */
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: var(--gap);
+      .topbar {
+        padding: 12px 12px 8px;
       }
 
-      .square {
-        user-select: none;
+      main {
         padding: 10px;
-        border-radius: var(--radius);
-        border: 1px solid #e7e7e7;
-        background: #f9e7d2;
-        box-shadow: var(--shadow);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        line-height: 1.2;
-        font-weight: 650;
-        font-size: 14px;
-
-        /* ✅ keeps tiles square for a nice 4x4 look */
-        aspect-ratio: 1 / 1;
       }
+    }
+  </style>
+</head>
 
-      .square.checked {
-        border-color: #fff;
-        background: linear-gradient(#0586b9, #2eb399, #ecc158);
-        color: #fff;
-        -webkit-text-fill-color: #fff;
-      }
-
-      .footer {
-        padding: 14px;
-        text-align: center;
-        color: #fff;
-      }
-
-      /* --- Bingo overlay --- */
-      .overlay[hidden] {
-        display: none;
-      }
-      .overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.35);
-        display: grid;
-        place-items: center;
-        z-index: 9999;
-        padding: 20px;
-      }
-
-      .overlay-card {
-        width: min(420px, 92vw);
-        background: #ff46a2;
-        border-radius: 18px;
-        padding: 18px 16px;
-        box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
-        text-align: center;
-        position: relative;
-      }
-
-      .overlay-title {
-        font-size: 28px;
-        font-weight: 900;
-        letter-spacing: 0.5px;
-        margin-bottom: 6px;
-        color: #f9e7d2;
-      }
-
-      .overlay-sub {
-        font-size: 14px;
-        opacity: 0.75;
-        margin-bottom: 12px;
-        color: white;
-      }
-
-      .overlay-actions {
-        display: flex;
-        justify-content: center;
-      }
-
-      /* --- Confetti (CSS only) --- */
-      .confetti {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        overflow: hidden;
-      }
-
-      .confetti i {
-        position: absolute;
-        top: -12px;
-        width: 10px;
-        height: 14px;
-        opacity: 0.95;
-        transform: rotate(10deg);
-        animation: fall 1100ms linear forwards;
-        border-radius: 3px;
-      }
-
-      @keyframes fall {
-        to {
-          transform: translateY(110vh) rotate(360deg);
-          opacity: 1;
-        }
-      }
-
-      /* Optional: a tiny “win” badge style if you add one later */
-      .badge {
-        display: inline-block;
-        padding: 6px 10px;
-        border-radius: 999px;
-        border: 1px solid #ddd;
-        background: #fff;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-        font-weight: 700;
-        font-size: 13px;
-      }
-
-      /* Responsive tweaks */
-      @media (max-width: 768px) {
-        :root {
-          --gap: 8px;
-          --radius: 12px;
-        }
-
-        main {
-          padding: 12px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        h1 {
-          font-size: 18px;
-          letter-spacing: 2px;
-        }
-
-        .topbar {
-          padding: 12px 12px 8px;
-        }
-
-        main {
-          padding: 10px;
-        }
-      }
-    </style>
-  </head>
-
-  <body>
-    <header class="topbar">
-      <img
-        class="logo"
-        src="https://electricavenuefestival.co.nz/wp-content/uploads/2025/05/Electric-Avenue-Logo.png"
-      />
-      <h1>BINGO</h1>
-      <div class="daypick">
-        <button id="day1Btn" type="button">Friday</button>
-        <button id="day2Btn" type="button">Saturday</button>
-      </div>
-      <div class="actions">
-        <button id="newBoardBtn" type="button">Reshuffle 🔀</button>
-        <button id="resetTicksBtn" type="button">Clear 🔫</button>
-      </div>
-      <p class="status" id="status"></p>
-    </header>
-
-    <main>
-      <section class="grid" id="grid" aria-label="Bingo grid"></section>
-    </main>
-
-    <footer class="footer">
-      <small> 💖 Love Caitlin (don't have too much fun without me) 💖 </small>
-    </footer>
-    <div id="bingoOverlay" class="overlay" hidden>
-      <div class="overlay-card">
-        <div class="overlay-title">BINGOOOOO! 🎉</div>
-        <div class="overlay-sub">What a slay</div>
-        <div class="overlay-actions">
-          <button id="closeOverlayBtn" type="button">u go gurl 💅</button>
-        </div>
-      </div>
-      <div id="confetti" class="confetti" aria-hidden="true"></div>
+<body>
+  <header class="topbar">
+    <img class="logo" src="https://electricavenuefestival.co.nz/wp-content/uploads/2025/05/Electric-Avenue-Logo.png" />
+    <h1>BINGO</h1>
+    <div class="daypick">
+      <button id="day1Btn" type="button">Friday</button>
+      <button id="day2Btn" type="button">Saturday</button>
     </div>
+    <div class="actions">
+      <button id="newBoardBtn" type="button">Reshuffle 🔀</button>
+      <button id="resetTicksBtn" type="button">Clear 🔫</button>
+    </div>
+    <p class="status" id="status"></p>
+  </header>
 
-    <script>
-      /* =========================
-   Festival Bingo (Day 1 + Day 2)
-   - 4x4 grid (16 tiles), no free space
-   - Day 1 ideas in Col A, Day 2 in Col B (row 1 headers)
-   - Saves board + ticks + wins locally
-   - Offline-friendly with sw.js caching
-   - FUN: Bingo detection + overlay + confetti + sound + haptics + win counter
-   ========================= */
+  <main>
+    <section class="grid" id="grid" aria-label="Bingo grid"></section>
+  </main>
 
-      /* -------- CONFIG -------- */
-      const SHEET_CSV_URL =
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2Yj9ONo5kfoZo1aRy8W4JniBbm36PqEy_Q93wYempTgNjeYxXt_U3V5vGoyUG9cgTTT2NcThJHpEz/pub?output=csv";
+  <footer class="footer">
+    <small> 💖 Love Caitlin (don't have too much fun without me) 💖 </small>
+  </footer>
+  <div id="bingoOverlay" class="overlay" hidden>
+    <div class="overlay-card">
+      <div class="overlay-title">BINGOOOOO! 🎉</div>
+      <div class="overlay-sub">What a slay</div>
+      <div class="overlay-actions">
+        <button id="closeOverlayBtn" type="button">u go gurl 💅</button>
+      </div>
+    </div>
+    <div id="confetti" class="confetti" aria-hidden="true"></div>
+  </div>
 
-      const GRID_DIM = 4;
-      const GRID_SIZE = GRID_DIM * GRID_DIM; // 16
-      const IDEAS_NEEDED = GRID_SIZE;
+  <script>
+    /* =========================
+ Festival Bingo (Day 1 + Day 2)
+ - 4x4 grid (16 tiles), no free space
+ - Day 1 ideas in Col A, Day 2 in Col B (row 1 headers)
+ - Saves board + ticks + wins locally
+ - Offline-friendly with sw.js caching
+ - FUN: Bingo detection + overlay + confetti + sound + haptics + win counter
+ ========================= */
 
-      const STORE_KEY_PREFIX = "festival-bingo-v3-day-";
-      const OPTIONS_CACHE_KEY = "festival-bingo-v3-options-cache";
-      const WINS_KEY_PREFIX = "festival-bingo-v3-wins-day-"; // + 1 or 2
+    /* -------- CONFIG -------- */
+    const SHEET_CSV_URL =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2Yj9ONo5kfoZo1aRy8W4JniBbm36PqEy_Q93wYempTgNjeYxXt_U3V5vGoyUG9cgTTT2NcThJHpEz/pub?output=csv";
 
-      /* -------- DOM HELPERS -------- */
-      function $(id) {
-        return document.getElementById(id);
+    const GRID_DIM = 4;
+    const GRID_SIZE = GRID_DIM * GRID_DIM; // 16
+    const IDEAS_NEEDED = GRID_SIZE;
+
+    const STORE_KEY_PREFIX = "festival-bingo-v3-day-";
+    const OPTIONS_CACHE_KEY = "festival-bingo-v3-options-cache";
+    const WINS_KEY_PREFIX = "festival-bingo-v3-wins-day-"; // + 1 or 2
+
+    /* -------- DOM HELPERS -------- */
+    function $(id) {
+      return document.getElementById(id);
+    }
+    function setStatus(msg) {
+      const el = $("status");
+      if (el) el.textContent = msg;
+    }
+
+    function getWinLines() {
+      const lines = [];
+
+      // rows
+      for (let r = 0; r < GRID_DIM; r++) {
+        const line = [];
+        for (let c = 0; c < GRID_DIM; c++) line.push(r * GRID_DIM + c);
+        lines.push(line);
       }
-      function setStatus(msg) {
-        const el = $("status");
-        if (el) el.textContent = msg;
+
+      // cols
+      for (let c = 0; c < GRID_DIM; c++) {
+        const line = [];
+        for (let r = 0; r < GRID_DIM; r++) line.push(r * GRID_DIM + c);
+        lines.push(line);
       }
 
-      /* -------- LOCAL STORAGE -------- */
-      function storeKeyForDay(day) {
-        return `${STORE_KEY_PREFIX}${day}`;
-      }
-      function winsKeyForDay(day) {
-        return `${WINS_KEY_PREFIX}${day}`;
-      }
+      // diagonals
+      lines.push([0, 5, 10, 15]);
+      lines.push([3, 6, 9, 12]);
 
-      function loadStateForDay(day) {
-        try {
-          const raw = localStorage.getItem(storeKeyForDay(day));
-          return raw ? JSON.parse(raw) : null;
-        } catch {
-          return null;
+      return lines;
+    }
+
+    const WIN_LINES = getWinLines();
+
+    function getLineWinSet(checked) {
+      const winners = new Set();
+      for (const line of WIN_LINES) {
+        if (line.every(i => checked[i])) {
+          line.forEach(i => winners.add(i));
         }
       }
-      function saveStateForDay(day, state) {
-        localStorage.setItem(storeKeyForDay(day), JSON.stringify(state));
-      }
+      return winners;
+    }
 
-      function loadWinsForDay(day) {
-        try {
-          return Number(localStorage.getItem(winsKeyForDay(day)) || "0");
-        } catch {
-          return 0;
+    /* -------- LOCAL STORAGE -------- */
+    function storeKeyForDay(day) {
+      return `${STORE_KEY_PREFIX}${day}`;
+    }
+    function winsKeyForDay(day) {
+      return `${WINS_KEY_PREFIX}${day}`;
+    }
+
+    function loadStateForDay(day) {
+      try {
+        const raw = localStorage.getItem(storeKeyForDay(day));
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+    function saveStateForDay(day, state) {
+      localStorage.setItem(storeKeyForDay(day), JSON.stringify(state));
+    }
+
+    function loadWinsForDay(day) {
+      try {
+        return Number(localStorage.getItem(winsKeyForDay(day)) || "0");
+      } catch {
+        return 0;
+      }
+    }
+    function saveWinsForDay(day, wins) {
+      localStorage.setItem(winsKeyForDay(day), String(wins));
+    }
+
+    function loadCachedOptions() {
+      try {
+        const raw = localStorage.getItem(OPTIONS_CACHE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+    function saveCachedOptions(optionsByDay) {
+      localStorage.setItem(
+        OPTIONS_CACHE_KEY,
+        JSON.stringify({
+          savedAt: new Date().toISOString(),
+          ...optionsByDay,
+        }),
+      );
+    }
+
+    /* -------- RANDOM / SHUFFLE -------- */
+    function randomInt(min, maxExclusive) {
+      const range = maxExclusive - min;
+      if (range <= 0) return min;
+
+      if (crypto?.getRandomValues) {
+        const maxUint = 0xffffffff;
+        const limit = maxUint - (maxUint % range);
+        const buf = new Uint32Array(1);
+        while (true) {
+          crypto.getRandomValues(buf);
+          const x = buf[0];
+          if (x < limit) return min + (x % range);
         }
       }
-      function saveWinsForDay(day, wins) {
-        localStorage.setItem(winsKeyForDay(day), String(wins));
+      return min + Math.floor(Math.random() * range);
+    }
+    function shuffleInPlace(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = randomInt(0, i + 1);
+        [arr[i], arr[j]] = [arr[j], arr[i]];
       }
+      return arr;
+    }
 
-      function loadCachedOptions() {
-        try {
-          const raw = localStorage.getItem(OPTIONS_CACHE_KEY);
-          return raw ? JSON.parse(raw) : null;
-        } catch {
-          return null;
+    /* -------- CSV PARSING (ROBUST) -------- */
+    function parseCSVToRows(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i + 1];
+
+        if (inQuotes) {
+          if (c === '"' && next === '"') {
+            field += '"';
+            i++;
+          } else if (c === '"') inQuotes = false;
+          else field += c;
+        } else {
+          if (c === '"') inQuotes = true;
+          else if (c === ",") {
+            row.push(field);
+            field = "";
+          } else if (c === "\n") {
+            row.push(field);
+            rows.push(row);
+            row = [];
+            field = "";
+          } else if (c === "\r") {
+            /* ignore */
+          } else field += c;
         }
       }
-      function saveCachedOptions(optionsByDay) {
-        localStorage.setItem(
-          OPTIONS_CACHE_KEY,
-          JSON.stringify({
-            savedAt: new Date().toISOString(),
-            ...optionsByDay,
-          }),
+
+      row.push(field);
+      rows.push(row);
+      return rows;
+    }
+
+    // Sheet: Col A = Day 1, Col B = Day 2, headers in row 1
+    function extractDayListsFromCSV(text) {
+      const rows = parseCSVToRows(text);
+      const day1 = [];
+      const day2 = [];
+
+      for (let r = 1; r < rows.length; r++) {
+        const a = (rows[r][0] ?? "").trim();
+        const b = (rows[r][1] ?? "").trim();
+        if (a) day1.push(a);
+        if (b) day2.push(b);
+      }
+      return { day1, day2 };
+    }
+
+    /* -------- OPTIONS HASH -------- */
+    function hashList(list) {
+      let h = 2166136261;
+      for (const s of list) {
+        for (let i = 0; i < s.length; i++) {
+          h ^= s.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+      }
+      return String(h >>> 0);
+    }
+    function hashOptionsByDay(optionsByDay) {
+      return `${hashList(optionsByDay.day1)}-${hashList(optionsByDay.day2)}`;
+    }
+
+    /* -------- BOARD GENERATION -------- */
+    function makeNewBoardFromOptions(items) {
+      const pool = [...items];
+      shuffleInPlace(pool);
+      const board = pool.slice(0, GRID_SIZE);
+
+      return {
+        createdAt: new Date().toISOString(),
+        board,
+        checked: Array(GRID_SIZE).fill(false),
+        celebratedFull: false, // celebrate only when the whole grid is checked
+      };
+    }
+
+    function isFullGrid(checked) {
+      return checked.every(Boolean);
+    }
+
+    /* -------- FUN EFFECTS -------- */
+    function vibrate(ms = 40) {
+      try {
+        navigator.vibrate?.(ms);
+      } catch { }
+    }
+
+    let audioCtx = null;
+    function playWinSound() {
+      try {
+        audioCtx =
+          audioCtx ||
+          new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.value = 740;
+        g.gain.value = 0.0001;
+
+        o.connect(g);
+        g.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+
+        o.start(now);
+        o.stop(now + 0.2);
+      } catch { }
+    }
+
+    function burstConfetti() {
+      const confetti = $("confetti");
+      if (!confetti) return;
+
+      confetti.innerHTML = "";
+      const pieces = 40;
+
+      for (let i = 0; i < pieces; i++) {
+        const p = document.createElement("i");
+        const left = randomInt(0, 100);
+        const delay = randomInt(0, 250);
+        const dur = randomInt(900, 1400);
+        const w = randomInt(6, 12);
+        const h = randomInt(10, 18);
+
+        p.style.left = `${left}vw`;
+        p.style.animationDelay = `${delay}ms`;
+        p.style.animationDuration = `${dur}ms`;
+        p.style.width = `${w}px`;
+        p.style.height = `${h}px`;
+
+        const palette = [
+          "#111",
+          "#ff3b30",
+          "#ffcc00",
+          "#34c759",
+          "#0a84ff",
+          "#bf5af2",
+        ];
+        p.style.background = palette[randomInt(0, palette.length)];
+        p.style.transform = `rotate(${randomInt(0, 360)}deg)`;
+
+        confetti.appendChild(p);
+      }
+
+      setTimeout(() => {
+        confetti.innerHTML = "";
+      }, 1600);
+    }
+
+    function showBingoOverlay() {
+      const overlay = $("bingoOverlay");
+      if (!overlay) return;
+      overlay.hidden = false;
+      burstConfetti();
+    }
+
+    function hideBingoOverlay() {
+      const overlay = $("bingoOverlay");
+      if (!overlay) return;
+      overlay.hidden = true;
+    }
+
+    /* -------- RENDER -------- */
+    function updateWinBadge() {
+      const wins = loadWinsForDay(app.currentDay);
+      const el = $("winsBadge");
+      if (el) el.textContent = `Wins: ${wins}`;
+    }
+
+    function renderBoard(state) {
+      const grid = $("grid");
+      if (!grid) return;
+
+      grid.innerHTML = "";
+
+      // ✅ compute which squares are in completed lines
+      const lineWins = getLineWinSet(state.checked);
+
+      state.board.forEach((text, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+
+        const isChecked = !!state.checked[idx];
+        const isLineWin = lineWins.has(idx);
+
+        btn.className =
+          "square" +
+          (isChecked ? " checked" : "") +
+          (isLineWin ? " linewin" : "");
+
+        btn.textContent = text;
+
+        btn.addEventListener("click", () => {
+          state.checked[idx] = !state.checked[idx];
+
+          // Full-grid celebration only (your current logic)
+          const full = isFullGrid(state.checked);
+
+          if (full && !state.celebratedFull) {
+            state.celebratedFull = true;
+
+            const wins = loadWinsForDay(app.currentDay) + 1;
+            saveWinsForDay(app.currentDay, wins);
+            updateWinBadge();
+
+            vibrate(80);
+            playWinSound();
+            showBingoOverlay();
+          }
+
+          if (!full && state.celebratedFull) {
+            state.celebratedFull = false;
+          }
+
+          saveStateForDay(app.currentDay, state);
+
+          // ✅ easiest + safest: re-render so line highlights update
+          renderBoard(state);
+        });
+
+        grid.appendChild(btn);
+      });
+
+      updateWinBadge();
+    }
+
+    /* -------- APP STATE -------- */
+    const app = {
+      currentDay: 1,
+      optionsByDay: { day1: [], day2: [] },
+      optionsHash: null,
+      state: null,
+    };
+
+    async function fetchAllOptions() {
+      const res = await fetch(SHEET_CSV_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+      const text = await res.text();
+
+      const optionsByDay = extractDayListsFromCSV(text);
+
+      if (optionsByDay.day1.length < IDEAS_NEEDED) {
+        throw new Error(
+          `Day 1 needs at least ${IDEAS_NEEDED} ideas (found ${optionsByDay.day1.length}).`,
+        );
+      }
+      if (optionsByDay.day2.length < IDEAS_NEEDED) {
+        throw new Error(
+          `Day 2 needs at least ${IDEAS_NEEDED} ideas (found ${optionsByDay.day2.length}).`,
         );
       }
 
-      /* -------- RANDOM / SHUFFLE -------- */
-      function randomInt(min, maxExclusive) {
-        const range = maxExclusive - min;
-        if (range <= 0) return min;
+      return optionsByDay;
+    }
 
-        if (crypto?.getRandomValues) {
-          const maxUint = 0xffffffff;
-          const limit = maxUint - (maxUint % range);
-          const buf = new Uint32Array(1);
-          while (true) {
-            crypto.getRandomValues(buf);
-            const x = buf[0];
-            if (x < limit) return min + (x % range);
-          }
-        }
-        return min + Math.floor(Math.random() * range);
-      }
-      function shuffleInPlace(arr) {
-        for (let i = arr.length - 1; i > 0; i--) {
-          const j = randomInt(0, i + 1);
-          [arr[i], arr[j]] = [arr[j], arr[i]];
-        }
-        return arr;
-      }
+    function getListForDay(day) {
+      return day === 1 ? app.optionsByDay.day1 : app.optionsByDay.day2;
+    }
 
-      /* -------- CSV PARSING (ROBUST) -------- */
-      function parseCSVToRows(text) {
-        const rows = [];
-        let row = [];
-        let field = "";
-        let inQuotes = false;
+    function setActiveDayButtons(day) {
+      $("day1Btn")?.classList.toggle("active", day === 1);
+      $("day2Btn")?.classList.toggle("active", day === 2);
+    }
 
-        for (let i = 0; i < text.length; i++) {
-          const c = text[i];
-          const next = text[i + 1];
+    async function loadDay(day) {
+      app.currentDay = day;
+      setActiveDayButtons(day);
 
-          if (inQuotes) {
-            if (c === '"' && next === '"') {
-              field += '"';
-              i++;
-            } else if (c === '"') inQuotes = false;
-            else field += c;
-          } else {
-            if (c === '"') inQuotes = true;
-            else if (c === ",") {
-              row.push(field);
-              field = "";
-            } else if (c === "\n") {
-              row.push(field);
-              rows.push(row);
-              row = [];
-              field = "";
-            } else if (c === "\r") {
-              /* ignore */
-            } else field += c;
-          }
-        }
+      app.state = loadStateForDay(day);
 
-        row.push(field);
-        rows.push(row);
-        return rows;
-      }
+      try {
+        setStatus(`Loading squares (Day ${day})…`);
+        app.optionsByDay = await fetchAllOptions();
+        app.optionsHash = hashOptionsByDay(app.optionsByDay);
 
-      // Sheet: Col A = Day 1, Col B = Day 2, headers in row 1
-      function extractDayListsFromCSV(text) {
-        const rows = parseCSVToRows(text);
-        const day1 = [];
-        const day2 = [];
-
-        for (let r = 1; r < rows.length; r++) {
-          const a = (rows[r][0] ?? "").trim();
-          const b = (rows[r][1] ?? "").trim();
-          if (a) day1.push(a);
-          if (b) day2.push(b);
-        }
-        return { day1, day2 };
-      }
-
-      /* -------- OPTIONS HASH -------- */
-      function hashList(list) {
-        let h = 2166136261;
-        for (const s of list) {
-          for (let i = 0; i < s.length; i++) {
-            h ^= s.charCodeAt(i);
-            h = Math.imul(h, 16777619);
-          }
-        }
-        return String(h >>> 0);
-      }
-      function hashOptionsByDay(optionsByDay) {
-        return `${hashList(optionsByDay.day1)}-${hashList(optionsByDay.day2)}`;
-      }
-
-      /* -------- BOARD GENERATION -------- */
-      function makeNewBoardFromOptions(items) {
-        const pool = [...items];
-        shuffleInPlace(pool);
-        const board = pool.slice(0, GRID_SIZE);
-
-        return {
-          createdAt: new Date().toISOString(),
-          board,
-          checked: Array(GRID_SIZE).fill(false),
-          celebratedFull: false, // celebrate only when the whole grid is checked
-        };
-      }
-
-      function isFullGrid(checked) {
-        return checked.every(Boolean);
-      }
-
-      /* -------- FUN EFFECTS -------- */
-      function vibrate(ms = 40) {
-        try {
-          navigator.vibrate?.(ms);
-        } catch {}
-      }
-
-      let audioCtx = null;
-      function playWinSound() {
-        try {
-          audioCtx =
-            audioCtx ||
-            new (window.AudioContext || window.webkitAudioContext)();
-          const o = audioCtx.createOscillator();
-          const g = audioCtx.createGain();
-          o.type = "sine";
-          o.frequency.value = 740;
-          g.gain.value = 0.0001;
-
-          o.connect(g);
-          g.connect(audioCtx.destination);
-
-          const now = audioCtx.currentTime;
-          g.gain.setValueAtTime(0.0001, now);
-          g.gain.exponentialRampToValueAtTime(0.2, now + 0.01);
-          g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
-
-          o.start(now);
-          o.stop(now + 0.2);
-        } catch {}
-      }
-
-      function burstConfetti() {
-        const confetti = $("confetti");
-        if (!confetti) return;
-
-        confetti.innerHTML = "";
-        const pieces = 40;
-
-        for (let i = 0; i < pieces; i++) {
-          const p = document.createElement("i");
-          const left = randomInt(0, 100);
-          const delay = randomInt(0, 250);
-          const dur = randomInt(900, 1400);
-          const w = randomInt(6, 12);
-          const h = randomInt(10, 18);
-
-          p.style.left = `${left}vw`;
-          p.style.animationDelay = `${delay}ms`;
-          p.style.animationDuration = `${dur}ms`;
-          p.style.width = `${w}px`;
-          p.style.height = `${h}px`;
-
-          const palette = [
-            "#111",
-            "#ff3b30",
-            "#ffcc00",
-            "#34c759",
-            "#0a84ff",
-            "#bf5af2",
-          ];
-          p.style.background = palette[randomInt(0, palette.length)];
-          p.style.transform = `rotate(${randomInt(0, 360)}deg)`;
-
-          confetti.appendChild(p);
-        }
-
-        setTimeout(() => {
-          confetti.innerHTML = "";
-        }, 1600);
-      }
-
-      function showBingoOverlay() {
-        const overlay = $("bingoOverlay");
-        if (!overlay) return;
-        overlay.hidden = false;
-        burstConfetti();
-      }
-
-      function hideBingoOverlay() {
-        const overlay = $("bingoOverlay");
-        if (!overlay) return;
-        overlay.hidden = true;
-      }
-
-      /* -------- RENDER -------- */
-      function updateWinBadge() {
-        const wins = loadWinsForDay(app.currentDay);
-        const el = $("winsBadge");
-        if (el) el.textContent = `Wins: ${wins}`;
-      }
-
-      function renderBoard(state) {
-        const grid = $("grid");
-        if (!grid) return;
-
-        grid.innerHTML = "";
-
-        state.board.forEach((text, idx) => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "square" + (state.checked[idx] ? " checked" : "");
-          btn.textContent = text;
-
-          btn.addEventListener("click", () => {
-            state.checked[idx] = !state.checked[idx];
-            btn.classList.toggle("checked", state.checked[idx]);
-
-            // Celebrate ONLY when the whole grid is checked
-            const full = isFullGrid(state.checked);
-
-            if (full && !state.celebratedFull) {
-              state.celebratedFull = true;
-
-              // increment wins (now means "full card")
-              const wins = loadWinsForDay(app.currentDay) + 1;
-              saveWinsForDay(app.currentDay, wins);
-              updateWinBadge();
-
-              vibrate(80);
-              playWinSound();
-              showBingoOverlay();
-            }
-
-            // If they untick anything, allow celebrating again later
-            if (!full && state.celebratedFull) {
-              state.celebratedFull = false;
-            }
-
-            saveStateForDay(app.currentDay, state);
-          });
-
-          grid.appendChild(btn);
+        saveCachedOptions({
+          day1: app.optionsByDay.day1,
+          day2: app.optionsByDay.day2,
+          optionsHash: app.optionsHash,
         });
 
-        updateWinBadge();
-      }
+        if (!app.state) {
+          const list = getListForDay(day);
+          app.state = makeNewBoardFromOptions(list);
+          app.state.optionsHash = app.optionsHash;
+          saveStateForDay(day, app.state);
+          setStatus(`Day ${day} ready. New board created.`);
+        } else {
+          // Back-compat: older saved states might not have celebratedFull yet
+          if (typeof app.state.celebratedFull !== "boolean")
+            app.state.celebratedFull = false;
 
-      /* -------- APP STATE -------- */
-      const app = {
-        currentDay: 1,
-        optionsByDay: { day1: [], day2: [] },
-        optionsHash: null,
-        state: null,
-      };
-
-      async function fetchAllOptions() {
-        const res = await fetch(SHEET_CSV_URL, { cache: "no-store" });
-        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-        const text = await res.text();
-
-        const optionsByDay = extractDayListsFromCSV(text);
-
-        if (optionsByDay.day1.length < IDEAS_NEEDED) {
-          throw new Error(
-            `Day 1 needs at least ${IDEAS_NEEDED} ideas (found ${optionsByDay.day1.length}).`,
-          );
+          if (
+            app.state.optionsHash &&
+            app.state.optionsHash !== app.optionsHash
+          ) {
+            setStatus(
+              `Squares updated since last time. Your Day ${day} board is kept — tap “New board” to reshuffle.`,
+            );
+            app.state.optionsHash = app.optionsHash;
+            saveStateForDay(day, app.state);
+          } else {
+            setStatus(
+              navigator.onLine
+                ? `Day ${day} ready (online).`
+                : `Day ${day} ready (offline).`,
+            );
+          }
         }
-        if (optionsByDay.day2.length < IDEAS_NEEDED) {
-          throw new Error(
-            `Day 2 needs at least ${IDEAS_NEEDED} ideas (found ${optionsByDay.day2.length}).`,
-          );
-        }
-
-        return optionsByDay;
-      }
-
-      function getListForDay(day) {
-        return day === 1 ? app.optionsByDay.day1 : app.optionsByDay.day2;
-      }
-
-      function setActiveDayButtons(day) {
-        $("day1Btn")?.classList.toggle("active", day === 1);
-        $("day2Btn")?.classList.toggle("active", day === 2);
-      }
-
-      async function loadDay(day) {
-        app.currentDay = day;
-        setActiveDayButtons(day);
-
-        app.state = loadStateForDay(day);
-
-        try {
-          setStatus(`Loading squares (Day ${day})…`);
-          app.optionsByDay = await fetchAllOptions();
-          app.optionsHash = hashOptionsByDay(app.optionsByDay);
-
-          saveCachedOptions({
-            day1: app.optionsByDay.day1,
-            day2: app.optionsByDay.day2,
-            optionsHash: app.optionsHash,
-          });
+      } catch (e) {
+        const cached = loadCachedOptions();
+        if (
+          cached?.day1?.length >= IDEAS_NEEDED &&
+          cached?.day2?.length >= IDEAS_NEEDED
+        ) {
+          app.optionsByDay = { day1: cached.day1, day2: cached.day2 };
+          app.optionsHash =
+            cached.optionsHash || hashOptionsByDay(app.optionsByDay);
 
           if (!app.state) {
             const list = getListForDay(day);
             app.state = makeNewBoardFromOptions(list);
             app.state.optionsHash = app.optionsHash;
             saveStateForDay(day, app.state);
-            setStatus(`Day ${day} ready. New board created.`);
+            setStatus(
+              `Offline: created a new Day ${day} board from cached squares.`,
+            );
           } else {
-            // Back-compat: older saved states might not have celebratedFull yet
-            if (typeof app.state.celebratedFull !== "boolean")
-              app.state.celebratedFull = false;
-
-            if (
-              app.state.optionsHash &&
-              app.state.optionsHash !== app.optionsHash
-            ) {
-              setStatus(
-                `Squares updated since last time. Your Day ${day} board is kept — tap “New board” to reshuffle.`,
-              );
-              app.state.optionsHash = app.optionsHash;
-              saveStateForDay(day, app.state);
-            } else {
-              setStatus(
-                navigator.onLine
-                  ? `Day ${day} ready (online).`
-                  : `Day ${day} ready (offline).`,
-              );
-            }
-          }
-        } catch (e) {
-          const cached = loadCachedOptions();
-          if (
-            cached?.day1?.length >= IDEAS_NEEDED &&
-            cached?.day2?.length >= IDEAS_NEEDED
-          ) {
-            app.optionsByDay = { day1: cached.day1, day2: cached.day2 };
-            app.optionsHash =
-              cached.optionsHash || hashOptionsByDay(app.optionsByDay);
-
-            if (!app.state) {
-              const list = getListForDay(day);
-              app.state = makeNewBoardFromOptions(list);
-              app.state.optionsHash = app.optionsHash;
-              saveStateForDay(day, app.state);
-              setStatus(
-                `Offline: created a new Day ${day} board from cached squares.`,
-              );
-            } else {
-              if (typeof app.state.celebratedFull !== "boolean")
-                app.state.celebratedFull = false;
-              setStatus(`Offline: using saved Day ${day} board.`);
-            }
-          } else if (app.state?.board?.length === GRID_SIZE) {
             if (typeof app.state.celebratedFull !== "boolean")
               app.state.celebratedFull = false;
             setStatus(`Offline: using saved Day ${day} board.`);
-          } else {
-            setStatus(
-              `Couldn’t load squares. Go online once before leaving to set up Day ${day}.`,
-            );
-            console.error(e);
-            return;
           }
-        }
-
-        renderBoard(app.state);
-      }
-
-      /* -------- UI WIRING -------- */
-      function wireUI() {
-        $("day1Btn")?.addEventListener("click", () => loadDay(1));
-        $("day2Btn")?.addEventListener("click", () => loadDay(2));
-
-        $("newBoardBtn")?.addEventListener("click", () => {
-          const list = getListForDay(app.currentDay);
-          if (!list?.length) {
-            setStatus("Squares list not loaded yet — go online once.");
-            return;
-          }
-          app.state = makeNewBoardFromOptions(list);
-          app.state.optionsHash =
-            app.optionsHash || hashOptionsByDay(app.optionsByDay);
-          saveStateForDay(app.currentDay, app.state);
-          renderBoard(app.state);
-          setStatus(`Day ${app.currentDay}: new board created.`);
-        });
-
-        $("resetTicksBtn")?.addEventListener("click", () => {
-          if (!app.state) return;
-          app.state.checked = Array(GRID_SIZE).fill(false);
-          app.state.celebratedFull = false; // allow celebration again
-          saveStateForDay(app.currentDay, app.state);
-          renderBoard(app.state);
-          setStatus(`Day ${app.currentDay}: ticks reset.`);
-        });
-
-        $("closeOverlayBtn")?.addEventListener("click", hideBingoOverlay);
-
-        // Tap outside card closes overlay
-        $("bingoOverlay")?.addEventListener("click", (e) => {
-          if (e.target && e.target.id === "bingoOverlay") hideBingoOverlay();
-        });
-      }
-
-      /* -------- SERVICE WORKER -------- */
-      async function registerServiceWorker() {
-        if (!("serviceWorker" in navigator)) return;
-        try {
-          await navigator.serviceWorker.register(
-            new URL("sw.js", window.location.href),
+        } else if (app.state?.board?.length === GRID_SIZE) {
+          if (typeof app.state.celebratedFull !== "boolean")
+            app.state.celebratedFull = false;
+          setStatus(`Offline: using saved Day ${day} board.`);
+        } else {
+          setStatus(
+            `Couldn’t load squares. Go online once before leaving to set up Day ${day}.`,
           );
-        } catch (e) {
-          console.warn("Service worker registration failed:", e);
+          console.error(e);
+          return;
         }
       }
 
-      /* -------- INIT -------- */
-      (async function init() {
-        await registerServiceWorker();
-        wireUI();
+      renderBoard(app.state);
+    }
 
-        // Inject a wins badge into the status line area if you haven't added one manually
-        const statusEl = $("status");
-        if (statusEl && !$("winsBadge")) {
-          const badge = document.createElement("span");
-          badge.id = "winsBadge";
-          badge.className = "badge";
-          badge.style.marginLeft = "10px";
-          badge.textContent = "Wins: 0";
-          statusEl.appendChild(badge);
+    /* -------- UI WIRING -------- */
+    function wireUI() {
+      $("day1Btn")?.addEventListener("click", () => loadDay(1));
+      $("day2Btn")?.addEventListener("click", () => loadDay(2));
+
+      $("newBoardBtn")?.addEventListener("click", () => {
+        const list = getListForDay(app.currentDay);
+        if (!list?.length) {
+          setStatus("Squares list not loaded yet — go online once.");
+          return;
         }
+        app.state = makeNewBoardFromOptions(list);
+        app.state.optionsHash =
+          app.optionsHash || hashOptionsByDay(app.optionsByDay);
+        saveStateForDay(app.currentDay, app.state);
+        renderBoard(app.state);
+        setStatus(`Day ${app.currentDay}: new board created.`);
+      });
 
-        await loadDay(1);
-      })();
-    </script>
-  </body>
+      $("resetTicksBtn")?.addEventListener("click", () => {
+        if (!app.state) return;
+        app.state.checked = Array(GRID_SIZE).fill(false);
+        app.state.celebratedFull = false; // allow celebration again
+        saveStateForDay(app.currentDay, app.state);
+        renderBoard(app.state);
+        setStatus(`Day ${app.currentDay}: ticks reset.`);
+      });
+
+      $("closeOverlayBtn")?.addEventListener("click", hideBingoOverlay);
+
+      // Tap outside card closes overlay
+      $("bingoOverlay")?.addEventListener("click", (e) => {
+        if (e.target && e.target.id === "bingoOverlay") hideBingoOverlay();
+      });
+    }
+
+    /* -------- SERVICE WORKER -------- */
+    async function registerServiceWorker() {
+      if (!("serviceWorker" in navigator)) return;
+      try {
+        await navigator.serviceWorker.register(
+          new URL("sw.js", window.location.href),
+        );
+      } catch (e) {
+        console.warn("Service worker registration failed:", e);
+      }
+    }
+
+    /* -------- INIT -------- */
+    (async function init() {
+      await registerServiceWorker();
+      wireUI();
+
+      // Inject a wins badge into the status line area if you haven't added one manually
+      const statusEl = $("status");
+      if (statusEl && !$("winsBadge")) {
+        const badge = document.createElement("span");
+        badge.id = "winsBadge";
+        badge.className = "badge";
+        badge.style.marginLeft = "10px";
+        badge.textContent = "Wins: 0";
+        statusEl.appendChild(badge);
+      }
+
+      await loadDay(1);
+    })();
+  </script>
+</body>
+
 </html>
