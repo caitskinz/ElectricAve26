@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="format-detection" content="telephone=no, email=no, address=no">
     <title>Electric Ave Bingo</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
@@ -30,8 +31,11 @@
         color: #111;
       }
 
-      a {
+      a,
+      a:visited,
+      a:active {
         color: black;
+        text-decoration: none;
       }
 
       .topbar {
@@ -252,7 +256,7 @@
         .topbar {
           padding: 12px 12px 8px;
         }
-        
+
         main {
           padding: 10px;
         }
