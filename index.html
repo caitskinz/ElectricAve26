@@ -3,7 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="format-detection" content="telephone=no, email=no, address=no">
+    <meta
+      name="format-detection"
+      content="telephone=no, email=no, address=no"
+    />
     <title>Electric Ave Bingo</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
@@ -84,8 +87,9 @@
 
       .daypick button.active {
         background: #0e85b6;
-        color: #fff;
+        color: #f9e7d2;
         border-color: #f9e7d2;
+        -webkit-text-fill-color: #f9e7d2;
       }
 
       button {
@@ -95,6 +99,10 @@
         border-radius: 12px;
         box-shadow: var(--shadow);
         font-weight: 600;
+        color: #111;
+        -webkit-text-fill-color: #111;
+        -webkit-appearance: none;
+        appearance: none;
       }
 
       button:active {
@@ -145,6 +153,7 @@
         border-color: #fff;
         background: linear-gradient(#0586b9, #2eb399, #ecc158);
         color: #fff;
+        -webkit-text-fill-color: #fff;
       }
 
       .footer {
